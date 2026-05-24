@@ -234,11 +234,12 @@ if st.button("🚀 Run Sales Funnel Audit") or st.session_state.audit_run:
         button_col1, button_col2, button_col3 = st.columns(3)
         
         with button_col1:
-            # 1. Premium Dynamic Consultation Brief Email Router (With Rep Name Integration)
+            # 1. Premium Dynamic Consultation Brief Email Router (With PDF Attachment Prompt)
             raw_body = (
                 f"Dear Ved Auto Solutions Team,\n\n"
                 f"My name is {clean_rep}, and I have completed the digital diagnostic validation for our showroom. "
                 f"We would like to align on a full-scale physical funnel audit.\n\n"
+                f"[NOTE: Please attach your downloaded 'Funnel_Audit_{clean_dealer}.pdf' report to this email before sending]\n\n"
                 f"--- AUTOMATED FUNNEL INSIGHTS ---\n"
                 f"• Dealership Profile: {clean_dealer}\n"
                 f"• Submitted By: {clean_rep}\n"
@@ -254,7 +255,7 @@ if st.button("🚀 Run Sales Funnel Audit") or st.session_state.audit_run:
             )
             
             email_target = "vedautosolutions@gmail.com" 
-            email_subject = urllib.parse.quote(f"🚀 Corporate Audit Brief: {clean_dealer} (Attn: {clean_rep})")
+            email_subject = urllib.parse.quote(f"🚀 Corporate Audit Brief & Report: {clean_dealer}")
             email_body = urllib.parse.quote(raw_body)
             mail_url = f"mailto:{email_target}?subject={email_subject}&body={email_body}"
             
