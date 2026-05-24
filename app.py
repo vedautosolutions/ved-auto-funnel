@@ -44,8 +44,8 @@ st.write("Professional Sales Funnel Audit & Revenue Recovery Engine")
 # --- 3. SIDEBAR INPUTS ---
 with st.sidebar:
     st.header("1. Audit Details")
-    rep_name = st.text_input("Representative Name", value="Rajesh Kumar")
-    dealer_name = st.text_input("Dealership Name", value="Om Sai Suzuki")
+    rep_name = st.text_input("Representative Name", value=" ")
+    dealer_name = st.text_input("Dealership Name", value=" ")
     
     st.divider()
     st.header("🏢 Live OEM Matrix")
