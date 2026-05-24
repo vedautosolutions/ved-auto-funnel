@@ -5,6 +5,7 @@ from datetime import datetime
 import pandas as pd
 import matplotlib.pyplot as plt
 import os
+import urllib.parse
 
 # --- 1. LIVE INDIAN BRAND MARKET BENCHMARKS ---
 INDIAN_BRANDS = {
@@ -229,19 +230,41 @@ if st.button("🚀 Run Sales Funnel Audit") or st.session_state.audit_run:
         
         button_col1, button_col2, button_col3 = st.columns(3)
         
-        with button_col1:
-            # 1. Dynamic Email Builder
-            email_target = "vedautosolutions@gmail.com"  # Change to your real agency email address
-            email_subject = urllib.parse.quote(f"Full-Fledged Funnel Audit Request - {dealer_name}")
-            email_body = urllib.parse.quote(
-                f"Hi Ved Auto Solutions Team,\n\n"
-                f"We just ran our initial health check for {dealer_name} and identified an estimated monthly leakage of Rs. {revenue_leak:,}.\n\n"
-                f"We want to schedule a full-fledged audit to look into our SC-wise data, training gaps, and process fixes.\n\n"
-                f"Best regards,\n"
-                f"Management Team"
-            )
-            mail_url = f"mailto:{email_target}?subject={email_subject}&body={email_body}"
-            st.link_button("📧 Request Full Audit via Email", mail_url, use_container_width=True)
+        with button_col1:import urllib.parse
+
+# 1. Safely calculate metrics from your existing session state variables
+# (These will automatically pull the data your user just entered)
+current_score = st.session_state.get('efficiency_score', 'N/A')
+selected_brand = st.session_state.get('selected_brand', 'Not Specified')
+total_volume = st.session_state.get('total_sales_volume', 0)
+followup_efficiency = st.session_state.get('followup_rate', '0%')
+
+# 2. Build the highly professional, structured consulting brief
+raw_body = (
+    f"Dear Ved Auto Solutions Team,\n\n"
+    f"I have just completed a digital diagnostic evaluation for my showroom and "
+    f"would like to request a comprehensive, full-fledged corporate audit.\n\n"
+    f"--- PRELIMINARY DIAGNOSTIC SUMMARY ---\n"
+    f"• Showroom Segment/Brand: {selected_brand}\n"
+    f"• Evaluated Sales Volume Tracker: {total_volume} units\n"
+    f"• Follow-up Execution Efficiency: {followup_efficiency}\n"
+    f"• Overall Funnel Efficiency Score: {current_score}/100\n"
+    f"---------------------------------------\n\n"
+    f"Please let me know your availability for a deep-dive consulting session to review "
+    f"our operational leakages and establish our custom training prescription framework.\n\n"
+    f"Best regards,\n"
+    f"[Your Name/Designation]\n"
+    f"[Dealership Name]"
+)
+
+# 3. Securely URL-encode the parameters to protect formatting across all mail clients
+email_target = "vedautosolutions@gmail.com"
+email_subject = urllib.parse.quote(f"🚀 Corporate Audit Request: {selected_brand} Funnel Evaluation")
+email_body = urllib.parse.quote(raw_body)
+
+# 4. Generate the optimized action button
+mail_url = f"mailto:{email_target}?subject={email_subject}&body={email_body}"
+st.link_button("📧 Request Full Audit & Consulting Blueprint", mail_url, use_container_width=True)
             
         with button_col2:
             # 2. Return to Top of Landing Page (Uses JS execution via iframe target parent)
