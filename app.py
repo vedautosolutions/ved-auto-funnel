@@ -234,13 +234,14 @@ if st.button("🚀 Run Sales Funnel Audit") or st.session_state.audit_run:
         button_col1, button_col2, button_col3 = st.columns(3)
         
         with button_col1:
-            # 1. Premium Dynamic Consultation Brief Email Router
+            # 1. Premium Dynamic Consultation Brief Email Router (With Rep Name Integration)
             raw_body = (
                 f"Dear Ved Auto Solutions Team,\n\n"
-                f"I have completed the digital diagnostic validation for my showroom and "
-                f"would like to align on a full-scale physical funnel audit.\n\n"
+                f"My name is {clean_rep}, and I have completed the digital diagnostic validation for our showroom. "
+                f"We would like to align on a full-scale physical funnel audit.\n\n"
                 f"--- AUTOMATED FUNNEL INSIGHTS ---\n"
                 f"• Dealership Profile: {clean_dealer}\n"
+                f"• Submitted By: {clean_rep}\n"
                 f"• Brand Alignment Matrix: {selected_brand} ({vehicle_type})\n"
                 f"• Operational Efficiency Evaluation: {score}/100\n"
                 f"• Projected Monthly Leakage Delta: Rs. {revenue_leak:,}\n"
@@ -248,11 +249,12 @@ if st.button("🚀 Run Sales Funnel Audit") or st.session_state.audit_run:
                 f"Please communicate your availability for an initial strategic consulting review and "
                 f"to structure our ongoing advisory retainer framework.\n\n"
                 f"Best regards,\n"
-                f"[Executive Name/Designation]"
+                f"{clean_rep}\n"
+                f"{clean_dealer}"
             )
             
             email_target = "vedautosolutions@gmail.com" 
-            email_subject = urllib.parse.quote(f"🚀 Corporate Audit Brief: {clean_dealer} ({selected_brand})")
+            email_subject = urllib.parse.quote(f"🚀 Corporate Audit Brief: {clean_dealer} (Attn: {clean_rep})")
             email_body = urllib.parse.quote(raw_body)
             mail_url = f"mailto:{email_target}?subject={email_subject}&body={email_body}"
             
