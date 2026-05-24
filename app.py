@@ -5,7 +5,6 @@ from datetime import datetime
 import pandas as pd
 import matplotlib.pyplot as plt
 import os
-import urllib.parse
 
 # --- 1. LIVE INDIAN BRAND MARKET BENCHMARKS ---
 INDIAN_BRANDS = {
@@ -45,8 +44,8 @@ st.write("Professional Sales Funnel Audit & Revenue Recovery Engine")
 # --- 3. SIDEBAR INPUTS ---
 with st.sidebar:
     st.header("1. Audit Details")
-    rep_name = st.text_input("Representative Name", value=" ")
-    dealer_name = st.text_input("Dealership Name", value=" ")
+    rep_name = st.text_input("Representative Name", value="")
+    dealer_name = st.text_input("Dealership Name", value="")
     
     st.divider()
     st.header("🏢 Live OEM Matrix")
@@ -74,8 +73,12 @@ if "audit_run" not in st.session_state:
 if st.button("🚀 Run Sales Funnel Audit") or st.session_state.audit_run:
     st.session_state.audit_run = True
 
-    if not rep_name or not dealer_name:
-        st.error("⚠️ Please provide Representative and Dealer names in the sidebar.")
+    # Strip inputs to prevent spaces from bypassing check
+    clean_rep = rep_name.strip()
+    clean_dealer = dealer_name.strip()
+
+    if not clean_rep or not clean_dealer:
+        st.error("⚠️ Please provide Representative and Dealer names in the sidebar to compile audit arrays.")
         st.session_state.audit_run = False
     else:
         # --- MATH ENGINE ---
@@ -150,7 +153,7 @@ if st.button("🚀 Run Sales Funnel Audit") or st.session_state.audit_run:
             st.write(f"**Optimized State Gross Profit:** Rs. {target_retails * profit_per_unit:,} / Month")
         st.success(f"### Potential Monthly Growth: +Rs. {revenue_leak:,}")
 
-        # --- PDF GENERATOR LOGIC ---
+        # --- PDF GENERATOR LOGIC (With explicit strings protecting against encoding issues) ---
         pdf = FPDF()
         pdf.add_page()
         pdf.set_fill_color(31, 73, 125); pdf.rect(0, 0, 210, 40, 'F')
@@ -158,8 +161,8 @@ if st.button("🚀 Run Sales Funnel Audit") or st.session_state.audit_run:
         pdf.cell(0, 18, "SALES FUNNEL AUDIT", ln=True, align='C')
         pdf.set_font("Arial", '', 10); pdf.cell(0, 5, f"Brand Portfolio Focus: {selected_brand} ({vehicle_type})", ln=True, align='C')
         pdf.ln(20); pdf.set_text_color(51, 51, 51); pdf.set_font("Arial", 'B', 11)
-        pdf.cell(100, 10, f"CLIENT: {dealer_name.upper()}")
-        pdf.cell(90, 10, f"REPRESENTATIVE: {rep_name.upper()}", ln=True, align='R')
+        pdf.cell(100, 10, f"CLIENT: {clean_dealer.upper()}")
+        pdf.cell(90, 10, f"REPRESENTATIVE: {clean_rep.upper()}", ln=True, align='R')
         pdf.ln(5); pdf.set_fill_color(248, 249, 250); pdf.set_font("Arial", 'B', 12); pdf.set_text_color(31, 73, 125)
         pdf.cell(0, 10, " 1. FINANCIAL OPPORTUNITY COST", ln=True, fill=True)
         pdf.set_font("Arial", '', 10); pdf.set_text_color(51, 51, 51); pdf.ln(2)
@@ -208,10 +211,10 @@ if st.button("🚀 Run Sales Funnel Audit") or st.session_state.audit_run:
         c1, c2, c3 = st.columns([1, 1, 2])
         with c1:
             pdf_data = pdf.output(dest='S').encode('latin-1', errors='ignore')
-            st.download_button("📥 Download PDF Report", data=pdf_data, file_name=f"Funnel_Audit_{dealer_name}.pdf", type="primary")
+            st.download_button("📥 Download PDF Report", data=pdf_data, file_name=f"Funnel_Audit_{clean_dealer}.pdf", type="primary")
         with c2:
             if user_phone:
-                wa_msg = f"Sales Funnel Audit for {dealer_name} ({selected_brand}) is ready. Score: {score}/100. Potential Growth: Rs. {revenue_leak:,}."
+                wa_msg = f"Sales Funnel Audit for {clean_dealer} ({selected_brand}) is ready. Score: {score}/100. Potential Growth: Rs. {revenue_leak:,}."
                 st.link_button("📲 Share via WhatsApp", f"https://wa.me/{user_phone}?text={urllib.parse.quote(wa_msg)}")
             else:
                 st.info("💡 Add number for WhatsApp sharing.")
@@ -223,7 +226,7 @@ if st.button("🚀 Run Sales Funnel Audit") or st.session_state.audit_run:
 
         if os.path.exists(chart_filename): os.remove(chart_filename)
 
-        # --- NEW CONVERSION HUB DESIGN (Item 1 & 2) ---
+        # --- OPTIMIZED CONVERSION HUB ---
         st.write("---")
         st.subheader("💼 Ready to Plug the Revenue Leaks?")
         st.write("Take the next step to deploy custom Training Prescriptions and SC-wise performance logic in your showroom.")
@@ -231,46 +234,34 @@ if st.button("🚀 Run Sales Funnel Audit") or st.session_state.audit_run:
         button_col1, button_col2, button_col3 = st.columns(3)
         
         with button_col1:
-# 1. Safely calculate metrics from your existing session state variables
-# (These will automatically pull the data your user just entered)
-current_score = st.session_state.get('efficiency_score', 'N/A')
-selected_brand = st.session_state.get('selected_brand', 'Not Specified')
-total_volume = st.session_state.get('total_sales_volume', 0)
-followup_efficiency = st.session_state.get('followup_rate', '0%')
-
-# 2. Build the highly professional, structured consulting brief
-raw_body = (
-    f"Dear Ved Auto Solutions Team,\n\n"
-    f"I have just completed a digital diagnostic evaluation for my showroom and "
-    f"would like to request a comprehensive, full-fledged corporate audit.\n\n"
-    f"--- PRELIMINARY DIAGNOSTIC SUMMARY ---\n"
-    f"• Showroom Segment/Brand: {selected_brand}\n"
-    f"• Evaluated Sales Volume Tracker: {total_volume} units\n"
-    f"• Follow-up Execution Efficiency: {followup_efficiency}\n"
-    f"• Overall Funnel Efficiency Score: {current_score}/100\n"
-    f"---------------------------------------\n\n"
-    f"Please let me know your availability for a deep-dive consulting session to review "
-    f"our operational leakages and establish our custom training prescription framework.\n\n"
-    f"Best regards,\n"
-    f"[Your Name/Designation]\n"
-    f"[Dealership Name]"
-)
-
-# 3. Securely URL-encode the parameters to protect formatting across all mail clients
-email_target = "vedautosolutions@gmail.com"
-email_subject = urllib.parse.quote(f"🚀 Corporate Audit Request: {selected_brand} Funnel Evaluation")
-email_body = urllib.parse.quote(raw_body)
-
-# 4. Generate the optimized action button
-mail_url = f"mailto:{email_target}?subject={email_subject}&body={email_body}"
-st.link_button("📧 Request Full Audit & Consulting Blueprint", mail_url, use_container_width=True)
+            # 1. Premium Dynamic Consultation Brief Email Router
+            raw_body = (
+                f"Dear Ved Auto Solutions Team,\n\n"
+                f"I have completed the digital diagnostic validation for my showroom and "
+                f"would like to align on a full-scale physical funnel audit.\n\n"
+                f"--- AUTOMATED FUNNEL INSIGHTS ---\n"
+                f"• Dealership Profile: {clean_dealer}\n"
+                f"• Brand Alignment Matrix: {selected_brand} ({vehicle_type})\n"
+                f"• Operational Efficiency Evaluation: {score}/100\n"
+                f"• Projected Monthly Leakage Delta: Rs. {revenue_leak:,}\n"
+                f"----------------------------------\n\n"
+                f"Please communicate your availability for an initial strategic consulting review and "
+                f"to structure our ongoing advisory retainer framework.\n\n"
+                f"Best regards,\n"
+                f"[Executive Name/Designation]"
+            )
+            
+            email_target = "vedautosolutions@gmail.com" 
+            email_subject = urllib.parse.quote(f"🚀 Corporate Audit Brief: {clean_dealer} ({selected_brand})")
+            email_body = urllib.parse.quote(raw_body)
+            mail_url = f"mailto:{email_target}?subject={email_subject}&body={email_body}"
+            
+            st.link_button("📧 Request Full Audit & Consulting Blueprint", mail_url, use_container_width=True)
             
         with button_col2:
-            # 2. Return to Top of Landing Page (Uses JS execution via iframe target parent)
-            # Instructs the browser window to hop back to the master page home banner
-            st.link_button("🏠 Return to Landing Home", "javascript:window.parent.location.hash=''; window.parent.scrollTo(0,0);", use_container_width=True)
+            # 2. Return to Top of Landing Page
+            st.link_button("🏠 Return to Landing Home", "index.html", use_container_width=True)
             
         with button_col3:
-            # 3. Future Audit Deep Dive Target Route Link
-            # While building, this loops straight to your direct booking channel/WhatsApp
+            # 3. Direct WhatsApp Retention Route
             st.link_button("📊 Explore Premium Corporate Solutions", "https://wa.me/918764628352?text=I%20want%20to%20know%20more%20about%20the%20premium%20retainer%20and%20full%20audit%20models.", use_container_width=True)
