@@ -231,7 +231,6 @@ if st.button("🚀 Run Sales Funnel Audit") or st.session_state.audit_run:
         button_col1, button_col2, button_col3 = st.columns(3)
         
         with button_col1:
-
 # 1. Safely calculate metrics from your existing session state variables
 # (These will automatically pull the data your user just entered)
 current_score = st.session_state.get('efficiency_score', 'N/A')
