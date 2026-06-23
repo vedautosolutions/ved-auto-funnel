@@ -6,7 +6,6 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import os
 import tempfile
-import io
 
 # --- 1. LIVE INDIAN BRAND MARKET BENCHMARKS ---
 INDIAN_BRANDS = {
@@ -72,7 +71,6 @@ with st.sidebar:
 if "audit_run" not in st.session_state:
     st.session_state.audit_run = False
 
-# Fix structural button state trigger
 if st.button("🚀 Run Sales Funnel Audit"):
     st.session_state.audit_run = True
 
@@ -118,7 +116,7 @@ if st.session_state.audit_run:
             })
             st.table(comparison_df)
         
-        # GENERATE SECURE THREAD-SAFE TEMP FILE FOR THE CHART
+        # Secure concurrency tempfile allocation
         with tempfile.NamedTemporaryFile(delete=False, suffix=".png") as tmpfile:
             chart_filename = tmpfile.name
 
@@ -215,7 +213,6 @@ if st.session_state.audit_run:
         
         c1, c2, c3 = st.columns([1, 1, 2])
         with c1:
-            # Native serverless string output handling safely mapped to standard bytes
             pdf_string = pdf.output(dest='S')
             pdf_bytes = pdf_string.encode('latin-1', errors='ignore')
             st.download_button("📥 Download PDF Report", data=pdf_bytes, file_name=f"Funnel_Audit_{clean_dealer}.pdf", type="primary")
