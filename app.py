@@ -5,6 +5,8 @@ from datetime import datetime
 import pandas as pd
 import matplotlib.pyplot as plt
 import os
+import tempfile
+import io
 
 # --- 1. LIVE INDIAN BRAND MARKET BENCHMARKS ---
 INDIAN_BRANDS = {
@@ -70,10 +72,11 @@ with st.sidebar:
 if "audit_run" not in st.session_state:
     st.session_state.audit_run = False
 
-if st.button("🚀 Run Sales Funnel Audit") or st.session_state.audit_run:
+# Fix structural button state trigger
+if st.button("🚀 Run Sales Funnel Audit"):
     st.session_state.audit_run = True
 
-    # Strip inputs to prevent spaces from bypassing check
+if st.session_state.audit_run:
     clean_rep = rep_name.strip()
     clean_dealer = dealer_name.strip()
 
@@ -115,18 +118,20 @@ if st.button("🚀 Run Sales Funnel Audit") or st.session_state.audit_run:
             })
             st.table(comparison_df)
         
+        # GENERATE SECURE THREAD-SAFE TEMP FILE FOR THE CHART
+        with tempfile.NamedTemporaryFile(delete=False, suffix=".png") as tmpfile:
+            chart_filename = tmpfile.name
+
         with col_chart:
             chart_data = pd.DataFrame({"Stage": ["Enq", "TD", "Bkg", "Ret"], "Count": [enq, tds, bkgs, retails]})
             st.bar_chart(chart_data, x="Stage", y="Count", color="#1f497d")
 
-        # GENERATE STATIC CHART FOR THE PDF
         fig, ax = plt.subplots(figsize=(5, 3))
         ax.bar(["Enq", "TD", "Bkg", "Ret"], [enq, tds, bkgs, retails], color="#1f497d")
         ax.set_ylabel("Volume")
         ax.spines['top'].set_visible(False)
         ax.spines['right'].set_visible(False)
         plt.tight_layout()
-        chart_filename = "temp_chart.png"
         plt.savefig(chart_filename, dpi=200)
         plt.close()
 
@@ -153,7 +158,7 @@ if st.button("🚀 Run Sales Funnel Audit") or st.session_state.audit_run:
             st.write(f"**Optimized State Gross Profit:** Rs. {target_retails * profit_per_unit:,} / Month")
         st.success(f"### Potential Monthly Growth: +Rs. {revenue_leak:,}")
 
-        # --- PDF GENERATOR LOGIC (With explicit strings protecting against encoding issues) ---
+        # --- PDF GENERATOR LOGIC ---
         pdf = FPDF()
         pdf.add_page()
         pdf.set_fill_color(31, 73, 125); pdf.rect(0, 0, 210, 40, 'F')
@@ -210,8 +215,10 @@ if st.button("🚀 Run Sales Funnel Audit") or st.session_state.audit_run:
         
         c1, c2, c3 = st.columns([1, 1, 2])
         with c1:
-            pdf_data = pdf.output(dest='S').encode('latin-1', errors='ignore')
-            st.download_button("📥 Download PDF Report", data=pdf_data, file_name=f"Funnel_Audit_{clean_dealer}.pdf", type="primary")
+            # Native serverless string output handling safely mapped to standard bytes
+            pdf_string = pdf.output(dest='S')
+            pdf_bytes = pdf_string.encode('latin-1', errors='ignore')
+            st.download_button("📥 Download PDF Report", data=pdf_bytes, file_name=f"Funnel_Audit_{clean_dealer}.pdf", type="primary")
         with c2:
             if user_phone:
                 wa_msg = f"Sales Funnel Audit for {clean_dealer} ({selected_brand}) is ready. Score: {score}/100. Potential Growth: Rs. {revenue_leak:,}."
@@ -234,7 +241,6 @@ if st.button("🚀 Run Sales Funnel Audit") or st.session_state.audit_run:
         button_col1, button_col2, button_col3 = st.columns(3)
         
         with button_col1:
-            # 1. Premium Dynamic Consultation Brief Email Router (With PDF Attachment Prompt)
             raw_body = (
                 f"Dear Ved Auto Solutions Team,\n\n"
                 f"My name is {clean_rep}, and I have completed the digital diagnostic validation for our showroom. "
@@ -262,9 +268,7 @@ if st.button("🚀 Run Sales Funnel Audit") or st.session_state.audit_run:
             st.link_button("📧 Request Full Audit & Consulting Blueprint", mail_url, use_container_width=True)
             
         with button_col2:
-            # 2. Return to Top of Landing Page
             st.link_button("🏠 Return to Landing Home", "index.html", use_container_width=True)
             
         with button_col3:
-            # 3. Direct WhatsApp Retention Route
             st.link_button("📊 Explore Premium Corporate Solutions", "https://wa.me/918764628352?text=I%20want%20to%20know%20more%20about%20the%20premium%20retainer%20and%20full%20audit%20models.", use_container_width=True)
