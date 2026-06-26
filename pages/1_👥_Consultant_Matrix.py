@@ -12,7 +12,7 @@ import tempfile
 # --- 1. CONFIG & APP SETUP ---
 st.set_page_config(page_title="Premium Enterprise | Consultant Performance Matrix", layout="wide")
 
-# Custom CSS injection for premium high-contrast webpage elements
+# Custom CSS injection for premium webpage cards and styling
 st.markdown("""
     <style>
     .metric-card-red {
@@ -39,7 +39,7 @@ st.markdown("""
     </style>
 """, unsafe_allow_html=True)
 
-# Monetization Gate
+# Monetization gate
 st.sidebar.header("🔑 Premium Enterprise Authentication")
 access_passcode = st.sidebar.text_input("Enter Premium Access Passcode", type="password")
 
@@ -53,7 +53,7 @@ if access_passcode != "VEDAUTO2026":
     st.stop()
 
 st.title("💎 Tier 2: Enterprise Multi-Segment Diagnostics")
-st.write("Upload master DMS trackers or files like `BMPL H2.xlsx`. The system automatically splits data by segment (PV vs. CV) and builds uniform diagnostic matrices.")
+st.write("Upload master DMS trackers or files like `BMPL H2.xlsx`. The system splits data by segment (PV vs. CV) and builds matching diagnostic matrices.")
 
 # Showroom Configuration Workspace
 with st.sidebar:
@@ -68,12 +68,17 @@ with st.sidebar:
 st.header("1. Unified Data Ingestion")
 uploaded_file = st.file_uploader("Upload Master DMS Tracker (xlsx/csv):", type=["csv", "xlsx"])
 
+# State Initialization
 if "master_clean_df" not in st.session_state:
     st.session_state.master_clean_df = None
+if "audit_calculated" not in st.session_state:
+    st.session_state.audit_calculated = False
+if "calculated_data" not in st.session_state:
+    st.session_state.calculated_data = None
 
 if uploaded_file is not None:
     if st.button("🧠 Run Multi-Segment AI Standardizer", type="primary"):
-        with st.spinner("Analyzing workforce structures, detecting vehicle segments, and extraction patterns..."):
+        with st.spinner("Analyzing sheet structures, detecting vehicle segments, and extraction patterns..."):
             try:
                 extracted_segments = []
                 
@@ -100,15 +105,15 @@ if uploaded_file is not None:
                     sample_payload = raw_df.head(45).to_string()
                     
                     system_instruction = (
-                        f"You are an expert automotive data extraction tool parsing metrics for the {seg_tag} showroom division. "
-                        "Identify columns mapping to Executive Names, Enquiries, and Retails. Map them dynamically. "
-                        "Return ONLY a clean, valid JSON array of objects containing exactly these three keys: "
-                        "'Consultant Name', 'Enquiries', 'Retails'. Convert strings to upper numbers. No backticks or explanation text."
+                        f"You are an expert automotive intelligence module parsing data for the {seg_tag} segment. "
+                        "Extract individual Sales Consultants and return a valid JSON array of objects with exactly these keys: "
+                        "'Consultant Name', 'Enquiries', 'Retails'. Only map row variables that contain valid numbers. "
+                        "Return pure JSON format without markdown ticks or backticks."
                     )
                     
                     response = client.models.generate_content(
                         model='gemini-2.5-flash',
-                        contents=f"Raw Segment Frame Data:\n{sample_payload}",
+                        contents=f"Raw Data:\n{sample_payload}",
                         config=types.GenerateContentConfig(
                             system_instruction=system_instruction, temperature=0.1
                         )
@@ -122,6 +127,7 @@ if uploaded_file is not None:
                         consolidated_records.append(row)
                         
                 st.session_state.master_clean_df = pd.DataFrame(consolidated_records)
+                st.session_state.audit_calculated = False  # Reset calculations on new upload
                 st.success(f"🎉 AI segmented roster successfully parsed! Found {len(st.session_state.master_clean_df)} active consultants.")
                 
             except Exception as e:
@@ -132,7 +138,8 @@ if st.session_state.master_clean_df is not None:
     st.subheader("Verify & Edit Extracted Showroom Roster")
     edited_master_df = st.data_editor(st.session_state.master_clean_df, num_rows="dynamic", width="stretch")
     
-    if st.button("📊 Calculate Operational Audits"):
+    if st.button("📊 Calculate Operational Audits") or st.session_state.audit_calculated:
+        st.session_state.audit_calculated = True
         st.header("2. Enterprise Performance Dashboard")
         
         calculated_rows = []
@@ -140,7 +147,6 @@ if st.session_state.master_clean_df is not None:
         total_pv_enq = 0; total_pv_retails = 0
         total_cv_enq = 0; total_cv_retails = 0
         
-        # Training counters for the extracted standalone summary map
         training_summary = {
             "Vehicle Demo & Pitching Drills": [],
             "Commercial Finance & Follow-up Drills": [],
@@ -189,7 +195,7 @@ if st.session_state.master_clean_df is not None:
                 <div class="metric-card-red">
                     <p style="margin:0; font-size:13px; color:#781E1E; font-weight:bold;">TOTAL MONTHLY REVENUE LEAKAGE</p>
                     <p style="margin:5px 0; font-size:28px; color:#B41414; font-weight:bold;">Rs. {global_leakage:,}</p>
-                    <p style="margin:0; font-size:12px; color:#644646;">Combined cross-segment financial recovery capability across all floors.</p>
+                    <p style="margin:0; font-size:12px; color:#644646;">Combined financial recovery capability across all floors.</p>
                 </div>
             """, unsafe_allow_html=True)
         with col2:
@@ -208,7 +214,9 @@ if st.session_state.master_clean_df is not None:
 
         # --- DYNAMIC CHART PRESENTATION FIXED ON THE WEBPAGE ---
         st.subheader("Divisional Revenue Leakage Footprint")
-        fig, ax = plt.subplots(figsize=(10, 2.8))
+        
+        # Explicit design declarations to fix flat-line visual bugs completely
+        fig, ax = plt.subplots(figsize=(10, 3))
         fig.patch.set_facecolor('#0E1117') 
         ax.set_facecolor('#0E1117')
         
@@ -223,12 +231,13 @@ if st.session_state.master_clean_df is not None:
         ax.tick_params(colors='#E0E0E0', labelsize=10)
         ax.xaxis.set_major_formatter(plt.FuncFormatter(lambda x, p: f'Rs. {x*1e-5:.1f} Lakh' if x > 0 else '0'))
         
+        # Explicit data labels inside chart canvas
         for bar in bars:
             width = bar.get_width()
             ax.annotate(f'Rs. {int(width):,}',
                         xy=(width, bar.get_y() + bar.get_height() / 2),
                         xytext=(7, 0), textcoords="offset points",
-                        ha='left', va='center', fontsize=9, fontweight='bold', color='#E0E0E0')
+                        ha='left', va='center', fontsize=10, fontweight='bold', color='#E0E0E0')
         plt.tight_layout()
         st.pyplot(fig)
         plt.close(fig)
@@ -246,13 +255,13 @@ if st.session_state.master_clean_df is not None:
 
         # --- STANDALONE MANDATE SUMMARY BLOCK (WEBPAGE) ---
         st.subheader("🎯 Standalone Divisional Training Mandate Summary")
-        st.write("Aggregated remediation priorities grouped team-wide for organizational scale:")
+        st.write("Extracted strategic remediation targets aggregated team-wide:")
         
         t_col1, t_col2, t_col3 = st.columns(3)
         with t_col1:
             st.markdown(f"""
                 <div class="training-card">
-                    <p style="margin:0; font-weight:bold; color:#1A2530;">📚 VEHICLE DEMO DRILLS</p>
+                    <p style="margin:0; font-weight:bold; color:#1A2530;">📚 VEHICLE DEMO DRILLES</p>
                     <p style="margin:5px 0; font-size:22px; font-weight:bold;">{len(training_summary['Vehicle Demo & Pitching Drills'])} Consultants</p>
                     <p style="margin:0; font-size:11px; color:#666;">Focus: Pipeline conversion acceleration.</p>
                 </div>
@@ -262,53 +271,11 @@ if st.session_state.master_clean_df is not None:
                 <div class="training-card">
                     <p style="margin:0; font-weight:bold; color:#1A2530;">🎯 FINANCE & FOLLOW-UP</p>
                     <p style="margin:5px 0; font-size:22px; font-weight:bold;">{len(training_summary['Commercial Finance & Follow-up Drills'])} Consultants</p>
-                    <p style="margin:0; font-size:11px; color:#666;">Focus: Commercial deal velocity and scaling.</p>
+                    <p style="margin:0; font-size:11px; color:#666;">Focus: Commercial deal velocity and closing.</p>
                 </div>
             """, unsafe_allow_html=True)
         with t_col3:
             st.markdown(f"""
                 <div class="training-card">
                     <p style="margin:0; font-weight:bold; color:#1A2530;">⚡ ELITE RETENTION</p>
-                    <p style="margin:5px 0; font-size:22px; font-weight:bold;">{len(training_summary['Elite Retention Masterclass'])} Consultants</p>
-                    <p style="margin:0; font-size:11px; color:#666;">Focus: Target match optimization variance.</p>
-                </div>
-            """, unsafe_allow_html=True)
-
-        # --- COMPILING MATPLOTLIB PLOT IMAGE FOR PDF EXPORT ---
-        fig_pdf, ax_pdf = plt.subplots(figsize=(5.5, 3.2))
-        bars_pdf = ax_pdf.bar(segments_chart, leaks_chart, color=['#2980B9', '#E67E22'], width=0.5)
-        ax_pdf.spines['top'].set_visible(False)
-        ax_pdf.spines['right'].set_visible(False)
-        ax_pdf.spines['left'].set_color('#BDC3C7')
-        ax_pdf.spines['bottom'].set_color('#BDC3C7')
-        ax_pdf.tick_params(axis='both', colors='#2C3E50', labelsize=8)
-        ax_pdf.yaxis.set_major_formatter(plt.FuncFormatter(lambda x, p: f'{x*1e-5:.1f}L' if x > 0 else '0'))
-        plt.tight_layout()
-        
-        with tempfile.NamedTemporaryFile(delete=False, suffix=".png") as tmpfile:
-            fig_pdf.savefig(tmpfile.name, dpi=300)
-            chart_img_path = tmpfile.name
-        plt.close(fig_pdf)
-
-        # =========================================================================
-        # ==================== ADVANCED ENTERPRISE PDF ENGINE ======================
-        # =========================================================================
-        # ALL EMOJIS REMOVED FROM TEXT FIELDS IN THIS BLOCK TO PREVENT ENCODING ERRORS
-        pdf = FPDF()
-        pdf.set_auto_page_break(auto=True, margin=15)
-        
-        # PAGE 1: EXECUTIVE BRIEFING
-        pdf.add_page()
-        pdf.set_fill_color(26, 37, 48) 
-        pdf.rect(0, 0, 210, 48, 'F')
-        pdf.set_fill_color(197, 160, 89) 
-        pdf.rect(0, 48, 210, 2, 'F')
-        
-        pdf.set_font("Arial", 'B', 18); pdf.set_text_color(255, 255, 255); pdf.set_y(14)
-        pdf.cell(0, 10, "ENTERPRISE MULTI-SEGMENT PERFORMANCE AUDIT", ln=True, align='C')
-        pdf.set_font("Arial", '', 10); pdf.set_text_color(200, 210, 220)
-        pdf.cell(0, 6, f"DEALERSHIP FACILITY: {dealer_name.upper()}  |  CROSS-SEGMENT PIPELINE EVALUATION", ln=True, align='C')
-        
-        # Financial Cards Block
-        pdf.ln(18)
-        pdf.set_fill_color(253, 242, 242); pdf.rect
+                    <p style="margin:5px 0; font-size:22px; font-weight:bold;">{len(training_summary
