@@ -63,17 +63,44 @@ if "clean_df" not in st.session_state:
 
 if uploaded_file is not None:
     if st.button("🧠 Run Zero-Friction AI Standardizer", type="primary"):
-        with st.spinner("AI is analyzing column mappings, cleaning string noise, and aligning arrays..."):
+        with st.spinner("AI scanning sheets, resolving data matrices, and verifying columns..."):
             try:
-                # Read file content safely into text block
+                raw_df = None
+                target_sheet = None
+                
+                # A. Parse layout variations
                 if uploaded_file.name.endswith(".csv"):
                     raw_df = pd.read_csv(uploaded_file)
                 else:
-                    raw_df = pd.read_excel(uploaded_file)
-                
+                    excel_file = pd.ExcelFile(uploaded_file)
+                    sheet_names = excel_file.sheet_names
+                    
+                    # Keywords to identify the correct performance metrics tab
+                    anchor_keywords = ["consultant", "sc name", "enquiry", "retail", "booking", "test drive", "td"]
+                    
+                    for sheet in sheet_names:
+                        df_peek = pd.read_excel(uploaded_file, sheet_name=sheet, nrows=5)
+                        sheet_content_sample = " ".join(df_peek.astype(str).flatten()).lower()
+                        
+                        if any(keyword in sheet_content_sample for keyword in anchor_keywords):
+                            raw_df = pd.read_excel(uploaded_file, sheet_name=sheet)
+                            target_sheet = sheet
+                            break
+                    
+                    if raw_df is None:
+                        raw_df = pd.read_excel(uploaded_file, sheet_name=0)
+
+                # B. Validation Gateway
+                if raw_df is None or raw_df.empty or len(raw_df.columns) < 2:
+                    st.error("❌ **Invalid Document Profile:** The system analyzed this file but could not detect a valid Sales Consultant performance matrix. Please upload a raw DMS/ERP performance report.")
+                    st.stop()
+
+                if target_sheet:
+                    st.toast(f"🎯 AI successfully identified data matrix in tab: '{target_sheet}'", icon="✅")
+
                 file_summary_text = raw_df.to_string()
 
-                # modern google-genai invocation using st.secrets API Key asset
+                # C. API Key Authorization
                 api_key = st.secrets.get("GEMINI_API_KEY", os.environ.get("GEMINI_API_KEY"))
                 if not api_key:
                     st.error("Missing Gemini API Key configuration. Add GEMINI_API_KEY to your Streamlit secrets control panel.")
@@ -118,7 +145,7 @@ if uploaded_file is not None:
 # Allow user review and minor editing of AI output to avoid pipeline blocks
 if st.session_state.clean_df is not None:
     st.subheader("Verify Processed Sales Consultant Roster:")
-    edited_df = st.data_editor(st.session_state.clean_df, num_rows="dynamic", use_container_width=True)
+    edited_df = st.data_editor(st.session_state.clean_df, num_rows="dynamic", width="stretch")
     
     if st.button("📊 Calculate Individual Leaks & Training Prescriptions"):
         st.header("2. Analytical Breakdown Matrix")
@@ -176,7 +203,6 @@ if st.session_state.clean_df is not None:
         st.metric("Total Showroom Monthly Profit Recovery Potential", f"Rs. {total_showroom_leak:,}")
         
         # --- GRAPHING LEAKS PER CONSULTANT ---
-              
         st.subheader("Revenue Leakage Visualization Per Executive")
         chart_data = pd.DataFrame({"Consultant": sc_names, "Revenue Leak (Rs.)": sc_leaks})
         st.bar_chart(chart_data, x="Consultant", y="Revenue Leak (Rs.)", color="#ff4757")
@@ -205,5 +231,5 @@ if st.session_state.clean_df is not None:
         pdf_string = pdf.output(dest='S')
         pdf_bytes = pdf_string.encode('latin-1', errors='ignore')
         
-        st.ln = st.write("") # Spacer layout trick
+        st.write("") # Clean spacing layout
         st.download_button("📥 Export Premium Consultant Audit (PDF)", data=pdf_bytes, file_name=f"Premium_SC_Audit_{dealer_name}.pdf", type="primary")
