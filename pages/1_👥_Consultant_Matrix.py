@@ -32,9 +32,19 @@ st.markdown("""
     .training-card {
         background-color: #F5F7FA;
         border-left: 5px solid #1A2530;
-        padding: 15px;
+        padding: 20px;
         border-radius: 4px;
-        margin-bottom: 10px;
+        margin-bottom: 15px;
+    }
+    .training-names {
+        font-size: 13px;
+        color: #555;
+        background-color: #FFFFFF;
+        padding: 10px;
+        border-radius: 4px;
+        border: 1px solid #E2E8F0;
+        margin-top: 8px;
+        line-height: 1.6;
     }
     </style>
 """, unsafe_allow_html=True)
@@ -136,7 +146,6 @@ if st.session_state.master_clean_df is not None:
     st.subheader("Verify & Edit Extracted Showroom Roster")
     edited_master_df = st.data_editor(st.session_state.master_clean_df, num_rows="dynamic", width="stretch")
     
-    # Decouple processing condition to persist view states on PDF downloads
     if st.button("📊 Calculate Operational Audits") or st.session_state.audit_calculated:
         st.session_state.audit_calculated = True
         st.header("2. Enterprise Performance Dashboard")
@@ -146,7 +155,6 @@ if st.session_state.master_clean_df is not None:
         total_pv_enq = 0; total_pv_retails = 0
         total_cv_enq = 0; total_cv_retails = 0
         
-        # Fixed structured mapping key targets
         training_summary = {
             "Vehicle Demo & Pitching Drills": [],
             "Commercial Finance & Follow-up Drills": [],
@@ -173,7 +181,7 @@ if st.session_state.master_clean_df is not None:
                 total_cv_enq += enq; total_cv_retails += retails
                 prescription = "Commercial Finance & Follow-up Drills" if retails < target_retails else "Elite Retention Masterclass"
                 
-            training_summary[prescription].append(name)
+            training_summary[prescription].append((name, leak))
             
             calculated_rows.append({
                 "Segment": segment,
@@ -188,14 +196,18 @@ if st.session_state.master_clean_df is not None:
         display_df = pd.DataFrame(calculated_rows)
         global_leakage = total_pv_leak + total_cv_leak
         
+        # Calculate revenue impact aggregates per segment/module block
+        pv_upside = sum(item[1] for item in training_summary["Vehicle Demo & Pitching Drills"])
+        cv_upside = sum(item[1] for item in training_summary["Commercial Finance & Follow-up Drills"])
+        
         # --- PREMIUM WEBPAGE INFOGRAPHIC CARDS ---
         col1, col2 = st.columns(2)
         with col1:
             st.markdown(f"""
                 <div class="metric-card-red">
-                    <p style="margin:0; font-size:13px; color:#781E1E; font-weight:bold;">TOTAL MONTHLY REVENUE LEAKAGE</p>
+                    <p style="margin:0; font-size:13px; color:#781E1E; font-weight:bold;">TOTAL MONTHLY REVENUE LEAKAGE (POTENTIAL UPSIDE)</p>
                     <p style="margin:5px 0; font-size:28px; color:#B41414; font-weight:bold;">Rs. {global_leakage:,}</p>
-                    <p style="margin:0; font-size:12px; color:#644646;">Combined cross-segment financial recovery capability across all floors.</p>
+                    <p style="margin:0; font-size:12px; color:#644646;">Combined cross-segment financial recovery upside if training is fully realized.</p>
                 </div>
             """, unsafe_allow_html=True)
         with col2:
@@ -250,170 +262,5 @@ if st.session_state.master_clean_df is not None:
             cv_slice = display_df[display_df["Segment"] == "CV"].drop(columns=["Segment", "Prescription"])
             st.dataframe(cv_slice.style.format({"Revenue Leak (Rs.)": "Rs. {:,}"}), use_container_width=True, hide_index=True)
 
-        # --- STANDALONE MANDATE SUMMARY BLOCK (WEBPAGE) ---
-        st.subheader("🎯 Standalone Divisional Training Mandate Summary")
-        st.write("Aggregated remediation priorities grouped team-wide for organizational scale:")
-        
-        t_col1, t_col2, t_col3 = st.columns(3)
-        with t_col1:
-            st.markdown(f"""
-                <div class="training-card">
-                    <p style="margin:0; font-weight:bold; color:#1A2530;">📚 VEHICLE DEMO DRILLS</p>
-                    <p style="margin:5px 0; font-size:22px; font-weight:bold;">{len(training_summary['Vehicle Demo & Pitching Drills'])} Consultants</p>
-                    <p style="margin:0; font-size:11px; color:#666;">Focus: Pipeline conversion acceleration.</p>
-                </div>
-            """, unsafe_allow_html=True)
-        with t_col2:
-            st.markdown(f"""
-                <div class="training-card">
-                    <p style="margin:0; font-weight:bold; color:#1A2530;">🎯 FINANCE & FOLLOW-UP</p>
-                    <p style="margin:5px 0; font-size:22px; font-weight:bold;">{len(training_summary['Commercial Finance & Follow-up Drills'])} Consultants</p>
-                    <p style="margin:0; font-size:11px; color:#666;">Focus: Commercial deal velocity and scaling.</p>
-                </div>
-            """, unsafe_allow_html=True)
-        with t_col3:
-            st.markdown(f"""
-                <div class="training-card">
-                    <p style="margin:0; font-weight:bold; color:#1A2530;">⚡ ELITE RETENTION</p>
-                    <p style="margin:5px 0; font-size:22px; font-weight:bold;">{len(training_summary['Elite Retention Masterclass'])} Consultants</p>
-                    <p style="margin:0; font-size:11px; color:#666;">Focus: Target match optimization variance.</p>
-                </div>
-            """, unsafe_allow_html=True)
-
-        # --- COMPILING MATPLOTLIB PLOT IMAGE FOR PDF EXPORT ---
-        fig_pdf, ax_pdf = plt.subplots(figsize=(5.5, 3.2))
-        bars_pdf = ax_pdf.bar(segments_chart, leaks_chart, color=['#2980B9', '#E67E22'], width=0.5)
-        ax_pdf.spines['top'].set_visible(False)
-        ax_pdf.spines['right'].set_visible(False)
-        ax_pdf.spines['left'].set_color('#BDC3C7')
-        ax_pdf.spines['bottom'].set_color('#BDC3C7')
-        ax_pdf.tick_params(axis='both', colors='#2C3E50', labelsize=8)
-        ax_pdf.yaxis.set_major_formatter(plt.FuncFormatter(lambda x, p: f'{x*1e-5:.1f}L' if x > 0 else '0'))
-        plt.tight_layout()
-        
-        with tempfile.NamedTemporaryFile(delete=False, suffix=".png") as tmpfile:
-            fig_pdf.savefig(tmpfile.name, dpi=300)
-            chart_img_path = tmpfile.name
-        plt.close(fig_pdf)
-
-        # =========================================================================
-        # ==================== ADVANCED ENTERPRISE PDF ENGINE ======================
-        # =========================================================================
-        pdf = FPDF()
-        pdf.set_auto_page_break(auto=True, margin=15)
-        
-        # PAGE 1: EXECUTIVE BRIEFING
-        pdf.add_page()
-        pdf.set_fill_color(26, 37, 48) 
-        pdf.rect(0, 0, 210, 48, 'F')
-        pdf.set_fill_color(197, 160, 89) 
-        pdf.rect(0, 48, 210, 2, 'F')
-        
-        pdf.set_font("Arial", 'B', 18); pdf.set_text_color(255, 255, 255); pdf.set_y(14)
-        pdf.cell(0, 10, "ENTERPRISE MULTI-SEGMENT PERFORMANCE AUDIT", ln=True, align='C')
-        pdf.set_font("Arial", '', 10); pdf.set_text_color(200, 210, 220)
-        pdf.cell(0, 6, f"DEALERSHIP FACILITY: {dealer_name.upper()}  |  CROSS-SEGMENT PIPELINE EVALUATION", ln=True, align='C')
-        
-        # Financial Cards Block
-        pdf.ln(18)
-        pdf.set_fill_color(253, 242, 242); pdf.rect(10, 60, 92, 34, 'F')
-        pdf.set_fill_color(214, 48, 49); pdf.rect(10, 60, 3, 34, 'F')
-        pdf.set_y(63); pdf.set_x(17); pdf.set_font("Arial", 'B', 10); pdf.set_text_color(120, 30, 30)
-        pdf.cell(80, 5, "TOTAL COMBINED REVENUE LEAKAGE", ln=True)
-        pdf.set_x(17); pdf.set_font("Arial", 'B', 16); pdf.set_text_color(180, 20, 20)
-        pdf.cell(80, 8, f"Rs. {global_leakage:,}", ln=True)
-        
-        pdf.set_y(60); pdf.set_fill_color(240, 247, 241); pdf.rect(108, 60, 92, 34, 'F')
-        pdf.set_fill_color(38, 166, 91); pdf.rect(108, 60, 3, 34, 'F')
-        pdf.set_y(63); pdf.set_x(115); pdf.set_font("Arial", 'B', 10); pdf.set_text_color(20, 80, 40)
-        pdf.cell(80, 5, "GLOBAL EFFICIENCY RATING", ln=True)
-        pdf.set_x(115); pdf.set_font("Arial", 'B', 16); pdf.set_text_color(38, 166, 91)
-        pdf.cell(80, 8, f"{global_efficiency} / 100", ln=True)
-        
-        # Chart and Summary text
-        pdf.set_y(102); pdf.set_x(10); pdf.set_font("Arial", 'B', 11); pdf.set_text_color(26, 37, 48)
-        pdf.cell(0, 8, "DIVISIONAL PIPELINE REVENUE UPSIDE MAP", ln=True)
-        pdf.image(chart_img_path, x=10, y=112, w=105)
-        
-        pdf.set_y(114); pdf.set_x(122); pdf.set_font("Arial", 'B', 10); pdf.set_text_color(44, 62, 80)
-        pdf.cell(75, 5, "PASSENGER (PV) SECTOR PROFILE", ln=True)
-        pdf.set_font("Arial", '', 9.5); pdf.set_x(122); pdf.set_text_color(60, 70, 80)
-        pdf.cell(75, 5, f"- Active Pipeline Size: {total_pv_enq:,} Enq", ln=True)
-        pdf.set_x(122)
-        pdf.cell(75, 5, f"- Quantified Loss: Rs. {total_pv_leak:,}", ln=True)
-        
-        pdf.ln(4); pdf.set_x(122); pdf.set_font("Arial", 'B', 10); pdf.set_text_color(44, 62, 80)
-        pdf.cell(75, 5, "COMMERCIAL (CV) SECTOR PROFILE", ln=True)
-        pdf.set_font("Arial", '', 9.5); pdf.set_x(122); pdf.set_text_color(60, 70, 80)
-        pdf.cell(75, 5, f"- Active Pipeline Size: {total_cv_enq:,} Enq", ln=True)
-        pdf.set_x(122)
-        pdf.cell(75, 5, f"- Quantified Loss: Rs. {total_cv_leak:,}", ln=True)
-        
-        # Standalone Training Mandate Block inside PDF Page 1 Bottom
-        pdf.set_y(180); pdf.set_x(10); pdf.set_font("Arial", 'B', 11); pdf.set_text_color(26, 37, 48)
-        pdf.cell(0, 8, "STANDALONE TEAM-WIDE TRAINING MANDATES", ln=True)
-        
-        pdf.set_fill_color(245, 247, 250); pdf.rect(10, 189, 190, 22, 'F')
-        pdf.set_y(192); pdf.set_x(14); pdf.set_font("Arial", 'B', 9); pdf.set_text_color(44, 62, 80)
-        pdf.cell(60, 5, "MODULE PROFILE")
-        pdf.cell(100, 5, "ASSIGNED EXECUTIVE COUNTS")
-        pdf.ln(5)
-        pdf.set_font("Arial", '', 9); pdf.set_text_color(60, 70, 80)
-        for module_name, list_execs in training_summary.items():
-            pdf.set_x(14)
-            pdf.cell(60, 4.5, f"- {module_name[:26]}:")
-            pdf.set_font("Arial", 'B', 9)
-            pdf.cell(100, 4.5, f"{len(list_execs)} Consultants Registered")
-            pdf.set_font("Arial", '', 9)
-            pdf.ln(4.5)
-
-        # PAGE 2+: GRANULAR ROSTER MATRIX
-        pdf.add_page()
-        pdf.set_font("Arial", 'B', 13); pdf.set_text_color(26, 37, 48)
-        pdf.cell(0, 8, "DETAILED SHOWROOM OPERATIONAL PERFORMANCE MATRIX", ln=True)
-        pdf.ln(3)
-        
-        pdf.set_font("Arial", 'B', 9); pdf.set_text_color(255, 255, 255); pdf.set_fill_color(26, 37, 48)
-        pdf.cell(18, 9, " DIV", fill=True, ln=False)
-        pdf.cell(60, 9, " CONSULTANT EXECUTIVE ROSTER", fill=True, ln=False)
-        pdf.cell(22, 9, "ENQUIRIES", fill=True, ln=False, align='C')
-        pdf.cell(24, 9, "DELIVERED", fill=True, ln=False, align='C')
-        pdf.cell(22, 9, "TARGET", fill=True, ln=False, align='C')
-        pdf.cell(44, 9, "REVENUE LOSS LEAKAGE ", fill=True, ln=True, align='R')
-        
-        pdf.set_font("Arial", '', 9); pdf.set_text_color(40, 45, 55)
-        alternate_row = False
-        
-        for row in calculated_rows:
-            if alternate_row:
-                pdf.set_fill_color(246, 249, 252)
-            else:
-                pdf.set_fill_color(255, 255, 255)
-                
-            safe_name = str(row['Consultant Name']).encode('ascii', 'ignore').decode('ascii').strip().upper()
-            
-            pdf.cell(18, 8.5, f" {row['Segment']}", fill=True, ln=False, border="B")
-            pdf.cell(60, 8.5, f" {safe_name[:28]}", fill=True, ln=False, border="B")
-            pdf.cell(22, 8.5, str(row['Enquiries']), fill=True, ln=False, align='C', border="B")
-            pdf.cell(24, 8.5, str(row['Retails']), fill=True, ln=False, align='C', border="B")
-            pdf.cell(22, 8.5, str(row['Target Retails']), fill=True, ln=False, align='C', border="B")
-            
-            if row['Revenue Leak (Rs.)'] > 0:
-                pdf.set_text_color(190, 30, 30); pdf.set_font("Arial", 'B', 9)
-                pdf.cell(44, 8.5, f"Rs. {row['Revenue Leak (Rs.)']:,} ", fill=True, ln=True, align='R', border="B")
-                pdf.set_text_color(40, 45, 55); pdf.set_font("Arial", '', 9)
-            else:
-                pdf.set_text_color(38, 166, 91); pdf.set_font("Arial", 'B', 9)
-                pdf.cell(44, 8.5, "Rs. 0 ", fill=True, ln=True, align='R', border="B")
-                pdf.set_text_color(40, 45, 55); pdf.set_font("Arial", '', 9)
-                
-            alternate_row = not alternate_row
-            
-        try:
-            os.unlink(chart_img_path)
-        except:
-            pass
-            
-        pdf_bytes = pdf.output(dest='S').encode('latin-1', errors='ignore')
-        st.write("")
-        st.download_button("📥 Export Multi-Segment Enterprise Audit (PDF)", data=pdf_bytes, file_name=f"Enterprise_Showroom_Audit_{dealer_name}.pdf", type="primary")
+        # --- REFACTORED MANDATE SUMMARY ROSTER BLOCK (WEBPAGE) ---
+        st.subheader("🎯 Standalone Divisional Training Mandate & Roster Summary
