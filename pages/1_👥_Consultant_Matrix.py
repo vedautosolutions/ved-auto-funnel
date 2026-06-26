@@ -219,17 +219,23 @@ if st.session_state.clean_df is not None:
         pdf.set_font("Arial", '', 9); pdf.set_text_color(51, 51, 51)
         
         for idx, row in display_results_df.iterrows():
+            # Clean out the emojis just for the text PDF printout to ensure zero encoding errors
+            clean_prescription = str(row['Training Prescription']).replace("📚 ", "").replace("🎯 ", "").replace("⚡ ", "")
+            
             summary_line = (
                 f"• {row['Consultant Name']} | Enq: {row['Enquiries']} | Retails: {row['Retails Delivered']}/{row['Target Retails']} "
-                f"| Leakage: {row['Revenue Leak (Rs.)']} -> Required Module: {row['Training Prescription']}"
+                f"| Leakage: {row['Revenue Leak (Rs.)']} -> Required Module: {clean_prescription}"
             )
-            pdf.multi_cell(0, 7, summary_line)
+            # Encode string safely to latin-1 characters, replacing unrecognizable symbols with spaces
+            safe_summary_line = summary_line.encode('latin-1', 'replace').decode('latin-1')
+            pdf.multi_cell(0, 7, safe_summary_line)
             
         pdf.ln(5); pdf.set_font("Arial", 'B', 11); pdf.set_text_color(255, 71, 87)
-        pdf.cell(0, 10, f"TOTAL SHOWROOM MONTHLY REVENUE LEAK: Rs. {total_showroom_leak:,}", ln=True)
+        safe_total_line = f"TOTAL SHOWROOM MONTHLY REVENUE LEAK: Rs. {total_showroom_leak:,}".encode('latin-1', 'replace').decode('latin-1')
+        pdf.cell(0, 10, safe_total_line, ln=True)
         
-        pdf_string = pdf.output(dest='S')
-        pdf_bytes = pdf_string.encode('latin-1', errors='ignore')
+        # Output directly to a safe bytearray
+        pdf_bytes = pdf.output(dest='S').encode('latin-1', errors='ignore')
         
         st.write("") # Clean spacing layout
         st.download_button("📥 Export Premium Consultant Audit (PDF)", data=pdf_bytes, file_name=f"Premium_SC_Audit_{dealer_name}.pdf", type="primary")
