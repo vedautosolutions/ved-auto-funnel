@@ -207,35 +207,91 @@ if st.session_state.clean_df is not None:
         chart_data = pd.DataFrame({"Consultant": sc_names, "Revenue Leak (Rs.)": sc_leaks})
         st.bar_chart(chart_data, x="Consultant", y="Revenue Leak (Rs.)", color="#ff4757")
         
-        # --- EXPORT REPORT LOGIC ---
+        # --- EXPORT REPORT LOGIC (PREMIUM EXECUTIVE LAYOUT) ---
         pdf = FPDF()
         pdf.add_page()
-        pdf.set_fill_color(26, 26, 26); pdf.rect(0, 0, 210, 35, 'F')
-        pdf.set_font("Arial", 'B', 16); pdf.set_text_color(255, 255, 255)
-        pdf.cell(0, 15, "PREMIUM CONSULTANT PERFORMANCE AUDIT", ln=True, align='C')
-        pdf.set_font("Arial", '', 10); pdf.cell(0, 5, f"Dealership Target: {dealer_name} | Focus Brand: {selected_brand}", ln=True, align='C')
-        pdf.ln(15); pdf.set_text_color(31, 73, 125); pdf.set_font("Arial", 'B', 12)
-        pdf.cell(0, 10, " EXECUTIVE EVALUATION ARRAY & TRAINING PRESCRIPTIONS", ln=True)
-        pdf.set_font("Arial", '', 9); pdf.set_text_color(51, 51, 51)
         
+        # 1. Premium Header Banner
+        pdf.set_fill_color(24, 28, 36) # Deep Slate/Charcoal
+        pdf.rect(0, 0, 210, 42, 'F')
+        
+        pdf.set_font("Arial", 'B', 18)
+        pdf.set_text_color(255, 255, 255)
+        pdf.set_y(12)
+        pdf.cell(0, 10, "PERFORMANCE AUDIT & PROFIT RECOVERY", ln=True, align='C')
+        
+        pdf.set_font("Arial", 'I', 10)
+        pdf.set_text_color(170, 180, 195)
+        pdf.cell(0, 5, f"Dealership: {dealer_name}  |  Manufacturer: {selected_brand}", ln=True, align='C')
+        
+        # 2. Executive Summary Block
+        pdf.ln(20)
+        pdf.set_fill_color(245, 247, 250) # Light Grey Box
+        pdf.rect(10, 50, 190, 22, 'F')
+        
+        pdf.set_y(53)
+        pdf.set_x(15)
+        pdf.set_font("Arial", 'B', 11)
+        pdf.set_text_color(40, 45, 55)
+        pdf.cell(100, 6, "Audit Summary Profile:", ln=False)
+        pdf.set_font("Arial", 'B', 12)
+        pdf.set_text_color(214, 48, 49) # Premium Crimson Red
+        pdf.cell(0, 6, f"Total Recovery Potential: Rs. {total_showroom_leak:,}", ln=True, align='R')
+        
+        pdf.set_x(15)
+        pdf.set_font("Arial", '', 9)
+        pdf.set_text_color(100, 110, 125)
+        pdf.cell(0, 5, "Metrics evaluated against industry standard benchmarks (75% Test Drive, 30% Retail Conversion).", ln=True)
+        
+        # 3. Structured Data Table Headers
+        pdf.ln(12)
+        pdf.set_fill_color(45, 55, 72) # Dark Steel Header Row
+        pdf.cell(50, 8, " Consultant Name", border=0, fill=True, ln=False)
+        pdf.cell(20, 8, "Enquiries", border=0, fill=True, ln=False, align='C')
+        pdf.cell(25, 8, "Delivered", border=0, fill=True, ln=False, align='C')
+        pdf.cell(25, 8, "Target", border=0, fill=True, ln=False, align='C')
+        pdf.cell(35, 8, "Revenue Leak", border=0, fill=True, ln=False, align='R')
+        pdf.cell(35, 8, "   Training Module", border=0, fill=True, ln=True)
+        
+        # Reset text color and font for data rows
+        pdf.set_font("Arial", '', 9)
+        pdf.set_text_color(50, 55, 65)
+        
+        # 4. Populate Matrix Grid Rows cleanly
+        alternate_row = False
         for idx, row in display_results_df.iterrows():
-            # Clean out the emojis just for the text PDF printout to ensure zero encoding errors
+            # Stripe background for high readability
+            if alternate_row:
+                pdf.set_fill_color(248, 250, 252)
+            else:
+                pdf.set_fill_color(255, 255, 255)
+                
+            # Safely sanitize names and remove those broken bullet/emoji artifacts entirely
+            safe_name = str(row['Consultant Name']).encode('ascii', 'ignore').decode('ascii').strip()
             clean_prescription = str(row['Training Prescription']).replace("📚 ", "").replace("🎯 ", "").replace("⚡ ", "")
             
-            summary_line = (
-                f"• {row['Consultant Name']} | Enq: {row['Enquiries']} | Retails: {row['Retails Delivered']}/{row['Target Retails']} "
-                f"| Leakage: {row['Revenue Leak (Rs.)']} -> Required Module: {clean_prescription}"
-            )
-            # Encode string safely to latin-1 characters, replacing unrecognizable symbols with spaces
-            safe_summary_line = summary_line.encode('latin-1', 'replace').decode('latin-1')
-            pdf.multi_cell(0, 7, safe_summary_line)
+            # Draw Data Row
+            current_y = pdf.get_y()
+            pdf.cell(50, 8, f" {safe_name}", fill=True, ln=False)
+            pdf.cell(20, 8, str(row['Enquiries']), fill=True, ln=False, align='C')
+            pdf.cell(25, 8, str(row['Retails Delivered']), fill=True, ln=False, align='C')
+            pdf.cell(25, 8, str(row['Target Retails']), fill=True, ln=False, align='C')
             
-        pdf.ln(5); pdf.set_font("Arial", 'B', 11); pdf.set_text_color(255, 71, 87)
-        safe_total_line = f"TOTAL SHOWROOM MONTHLY REVENUE LEAK: Rs. {total_showroom_leak:,}".encode('latin-1', 'replace').decode('latin-1')
-        pdf.cell(0, 10, safe_total_line, ln=True)
-        
-        # Output directly to a safe bytearray
+            # Highlight non-zero leaks in dark red to emphasize value
+            if row['raw_leak'] > 0:
+                pdf.set_text_color(180, 40, 40)
+                pdf.cell(35, 8, f"Rs. {row['raw_leak']:,} ", fill=True, ln=False, align='R')
+                pdf.set_text_color(50, 55, 65)
+            else:
+                pdf.set_text_color(40, 160, 80) # Clean Green for zero leak
+                pdf.cell(35, 8, "Rs. 0 ", fill=True, ln=False, align='R')
+                pdf.set_text_color(50, 55, 65)
+                
+            pdf.cell(35, 8, f"  {clean_prescription}", fill=True, ln=True)
+            alternate_row = not alternate_row
+            
+        # 5. Compile to safe download bytes
         pdf_bytes = pdf.output(dest='S').encode('latin-1', errors='ignore')
         
-        st.write("") # Clean spacing layout
+        st.write("") # Layout Spacing
         st.download_button("📥 Export Premium Consultant Audit (PDF)", data=pdf_bytes, file_name=f"Premium_SC_Audit_{dealer_name}.pdf", type="primary")
