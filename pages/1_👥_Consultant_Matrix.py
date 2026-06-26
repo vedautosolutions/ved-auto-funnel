@@ -233,7 +233,7 @@ if st.session_state.master_clean_df is not None:
         st.pyplot(fig)
         plt.close(fig)
 
-        # --- WEBPAGE DIVISIONAL TABLES ---
+        # --- WEBPAGE DIVISIONAL TABS ---
         tab_pv, tab_cv = st.tabs(["🚗 Passenger Vehicle (PV) Fleet Roster", "🚛 Commercial Vehicle (CV) Fleet Roster"])
         
         with tab_pv:
@@ -293,6 +293,7 @@ if st.session_state.master_clean_df is not None:
         # =========================================================================
         # ==================== ADVANCED ENTERPRISE PDF ENGINE ======================
         # =========================================================================
+        # ALL EMOJIS REMOVED FROM TEXT FIELDS IN THIS BLOCK TO PREVENT ENCODING ERRORS
         pdf = FPDF()
         pdf.set_auto_page_break(auto=True, margin=15)
         
@@ -310,105 +311,4 @@ if st.session_state.master_clean_df is not None:
         
         # Financial Cards Block
         pdf.ln(18)
-        pdf.set_fill_color(253, 242, 242); pdf.rect(10, 60, 92, 34, 'F')
-        pdf.set_fill_color(214, 48, 49); pdf.rect(10, 60, 3, 34, 'F')
-        pdf.set_y(63); pdf.set_x(17); pdf.set_font("Arial", 'B', 10); pdf.set_text_color(120, 30, 30)
-        pdf.cell(80, 5, "TOTAL COMBINED REVENUE LEAKAGE", ln=True)
-        pdf.set_x(17); pdf.set_font("Arial", 'B', 16); pdf.set_text_color(180, 20, 20)
-        pdf.cell(80, 8, f"Rs. {global_leakage:,}", ln=True)
-        
-        pdf.set_y(60); pdf.set_fill_color(240, 247, 241); pdf.rect(108, 60, 92, 34, 'F')
-        pdf.set_fill_color(38, 166, 91); pdf.rect(108, 60, 3, 34, 'F')
-        pdf.set_y(63); pdf.set_x(115); pdf.set_font("Arial", 'B', 10); pdf.set_text_color(20, 80, 40)
-        pdf.cell(80, 5, "GLOBAL EFFICIENCY RATING", ln=True)
-        pdf.set_x(115); pdf.set_font("Arial", 'B', 16); pdf.set_text_color(38, 166, 91)
-        pdf.cell(80, 8, f"{global_efficiency} / 100", ln=True)
-        
-        # Chart and Summary text
-        pdf.set_y(102); pdf.set_x(10); pdf.set_font("Arial", 'B', 11); pdf.set_text_color(26, 37, 48)
-        pdf.cell(0, 8, "DIVISIONAL PIPELINE REVENUE UPSIDE MAP", ln=True)
-        pdf.image(chart_img_path, x=10, y=112, w=105)
-        
-        pdf.set_y(114); pdf.set_x(122); pdf.set_font("Arial", 'B', 10); pdf.set_text_color(44, 62, 80)
-        pdf.cell(75, 5, "PASSENGER (PV) SECTOR PROFILE", ln=True)
-        pdf.set_font("Arial", '', 9.5); pdf.set_x(122); pdf.set_text_color(60, 70, 80)
-        pdf.cell(75, 5, f"• Active Pipeline Size: {total_pv_enq:,} Enq", ln=True)
-        pdf.set_x(122)
-        pdf.cell(75, 5, f"• Quantified Loss: Rs. {total_pv_leak:,}", ln=True)
-        
-        pdf.ln(4); pdf.set_x(122); pdf.set_font("Arial", 'B', 10); pdf.set_text_color(44, 62, 80)
-        pdf.cell(75, 5, "COMMERCIAL (CV) SECTOR PROFILE", ln=True)
-        pdf.set_font("Arial", '', 9.5); pdf.set_x(122); pdf.set_text_color(60, 70, 80)
-        pdf.cell(75, 5, f"• Active Pipeline Size: {total_cv_enq:,} Enq", ln=True)
-        pdf.set_x(122)
-        pdf.cell(75, 5, f"• Quantified Loss: Rs. {total_cv_leak:,}", ln=True)
-        
-        # Standalone Training Mandate Block inside PDF Page 1 Bottom
-        pdf.set_y(180); pdf.set_x(10); pdf.set_font("Arial", 'B', 11); pdf.set_text_color(26, 37, 48)
-        pdf.cell(0, 8, "🎯 STANDALONE TEAM-WIDE TRAINING MANDATES", ln=True)
-        
-        pdf.set_fill_color(245, 247, 250); pdf.rect(10, 189, 190, 22, 'F')
-        pdf.set_y(192); pdf.set_x(14); pdf.set_font("Arial", 'B', 9); pdf.set_text_color(44, 62, 80)
-        pdf.cell(60, 5, "MODULE PROFILE")
-        pdf.cell(100, 5, "ASSIGNED EXECUTIVE COUNTS")
-        pdf.ln(5)
-        pdf.set_font("Arial", '', 9); pdf.set_text_color(60, 70, 80)
-        for module_name, list_execs in training_summary.items():
-            pdf.set_x(14)
-            pdf.cell(60, 4.5, f"• {module_name[:26]}:")
-            pdf.set_font("Arial", 'B', 9)
-            pdf.cell(100, 4.5, f"{len(list_execs)} Consultants Registered")
-            pdf.set_font("Arial", '', 9)
-            pdf.ln(4.5)
-
-        # PAGE 2+: GRANULAR ROSTER MATRIX (Cleaned of repetitive text columns)
-        pdf.add_page()
-        pdf.set_font("Arial", 'B', 13); pdf.set_text_color(26, 37, 48)
-        pdf.cell(0, 8, "DETAILED SHOWROOM OPERATIONAL PERFORMANCE MATRIX", ln=True)
-        pdf.ln(3)
-        
-        pdf.set_font("Arial", 'B', 9); pdf.set_text_color(255, 255, 255); pdf.set_fill_color(26, 37, 48)
-        pdf.cell(18, 9, " DIV", fill=True, ln=False)
-        pdf.cell(60, 9, " CONSULTANT EXECUTIVE ROSTER", fill=True, ln=False)
-        pdf.cell(22, 9, "ENQUIRIES", fill=True, ln=False, align='C')
-        pdf.cell(24, 9, "DELIVERED", fill=True, ln=False, align='C')
-        pdf.cell(22, 9, "TARGET", fill=True, ln=False, align='C')
-        pdf.cell(44, 9, "REVENUE LOSS LEAKAGE ", fill=True, ln=True, align='R')
-        
-        pdf.set_font("Arial", '', 9); pdf.set_text_color(40, 45, 55)
-        alternate_row = False
-        
-        for row in calculated_rows:
-            if alternate_row:
-                pdf.set_fill_color(246, 249, 252)
-            else:
-                pdf.set_fill_color(255, 255, 255)
-                
-            safe_name = str(row['Consultant Name']).encode('ascii', 'ignore').decode('ascii').strip().upper()
-            
-            pdf.cell(18, 8.5, f" {row['Segment']}", fill=True, ln=False, border="B")
-            pdf.cell(60, 8.5, f" {safe_name[:28]}", fill=True, ln=False, border="B")
-            pdf.cell(22, 8.5, str(row['Enquiries']), fill=True, ln=False, align='C', border="B")
-            pdf.cell(24, 8.5, str(row['Retails']), fill=True, ln=False, align='C', border="B")
-            pdf.cell(22, 8.5, str(row['Target Retails']), fill=True, ln=False, align='C', border="B")
-            
-            # FIXED KEY ENFORCEMENT HERE: 'Revenue Leak (Rs.)'
-            if row['Revenue Leak (Rs.)'] > 0:
-                pdf.set_text_color(190, 30, 30); pdf.set_font("Arial", 'B', 9)
-                pdf.cell(44, 8.5, f"Rs. {row['Revenue Leak (Rs.)']:,} ", fill=True, ln=True, align='R', border="B")
-                pdf.set_text_color(40, 45, 55); pdf.set_font("Arial", '', 9)
-            else:
-                pdf.set_text_color(38, 166, 91); pdf.set_font("Arial", 'B', 9)
-                pdf.cell(44, 8.5, "Rs. 0 ", fill=True, ln=True, align='R', border="B")
-                pdf.set_text_color(40, 45, 55); pdf.set_font("Arial", '', 9)
-                
-            alternate_row = not alternate_row
-            
-        try:
-            os.unlink(chart_img_path)
-        except:
-            pass
-            
-        pdf_bytes = pdf.output(dest='S').encode('latin-1', errors='ignore')
-        st.write("")
-        st.download_button("📥 Export Multi-Segment Enterprise Audit (PDF)", data=pdf_bytes, file_name=f"Enterprise_Showroom_Audit_{dealer_name}.pdf", type="primary")
+        pdf.set_fill_color(253, 242, 242); pdf.rect
