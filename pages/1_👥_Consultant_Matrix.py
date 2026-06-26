@@ -176,8 +176,7 @@ if st.session_state.clean_df is not None:
         st.metric("Total Showroom Monthly Profit Recovery Potential", f"Rs. {total_showroom_leak:,}")
         
         # --- GRAPHING LEAKS PER CONSULTANT ---
-        <Image alt="Streamlit data editor table view showing structured data rows" caption="Interactive Consultant Tracking Matrix" src="image_agent_tag_7033002542931640999"/>
-        
+              
         st.subheader("Revenue Leakage Visualization Per Executive")
         chart_data = pd.DataFrame({"Consultant": sc_names, "Revenue Leak (Rs.)": sc_leaks})
         st.bar_chart(chart_data, x="Consultant", y="Revenue Leak (Rs.)", color="#ff4757")
