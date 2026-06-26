@@ -2,3 +2,5 @@ streamlit
 fpdf
 matplotlib
 pandas
+google-genai
+openpyxl
