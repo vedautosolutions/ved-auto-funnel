@@ -38,7 +38,7 @@ url_category = query_params.get("category", "4-Wheeler")
 default_index = 0 if url_category == "4-Wheeler" else 1
 
 # --- 2. PAGE CONFIG ---
-st.set_page_config(page_title="AutoLogic Pro", layout="wide")
+st.set_page_config(page_title="AutoLogic Pro", layout="wide", initial_sidebar_state="expanded")
 st.title("🚗 AutoLogic Diagnostic Suite")
 st.write("Professional Sales Funnel Audit & Revenue Recovery Engine")
 
