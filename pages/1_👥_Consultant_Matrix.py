@@ -171,7 +171,7 @@ if st.session_state.clean_df is not None:
             sc_leaks.append(sc_leakage_val)
             
         display_results_df = pd.DataFrame(processed_rows)
-        st.table(display_results_df.drop(columns=["raw_leak"]))
+        st.table(display_results_df.drop(columns=["raw_leak"], errors="ignore"))
         
         st.metric("Total Showroom Monthly Profit Recovery Potential", f"Rs. {total_showroom_leak:,}")
         
