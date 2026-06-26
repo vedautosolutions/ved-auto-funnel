@@ -221,23 +221,21 @@ if st.session_state.clean_df is not None:
         funnel_labels = ['Enquiries', 'Test Drives', 'Bookings', 'Retails']
         funnel_volumes = [total_enq, total_tds, total_bkgs, total_retails]
         
-        # Clean corporate layout colors for infographic aesthetics
-        bars = ax.bar(funnel_labels, funnel_volumes, color=['#2c3e50', '#34495e', '#2980b9', '#16a085'], width=0.6)
-        ax.set_ylabel('Pipeline Volume', fontsize=9, fontweight='bold', color='#2c3e50')
+        bars = ax.bar(funnel_labels, funnel_volumes, color=['#1A2530', '#2C3E50', '#2980B9', '#16A085'], width=0.6)
+        ax.set_ylabel('Pipeline Volume', fontsize=9, fontweight='bold', color='#1A2530')
         ax.spines['top'].set_visible(False)
         ax.spines['right'].set_visible(False)
-        ax.spines['left'].set_color('#bdc3c7')
-        ax.spines['bottom'].set_color('#bdc3c7')
-        ax.tick_params(axis='both', colors='#34495e', labelsize=8)
+        ax.spines['left'].set_color('#BDC3C7')
+        ax.spines['bottom'].set_color('#BDC3C7')
+        ax.tick_params(axis='both', colors='#2C3E50', labelsize=8)
         
-        # Add values cleanly on top of bars
         for bar in bars:
             height = bar.get_height()
             ax.annotate(f'{height:,}',
                         xy=(bar.get_x() + bar.get_width() / 2, height),
                         xytext=(0, 3),  
                         textcoords="offset points",
-                        ha='center', va='bottom', fontsize=8, fontweight='bold', color='#2c3e50')
+                        ha='center', va='bottom', fontsize=8, fontweight='bold', color='#1A2530')
                         
         plt.tight_layout()
         
@@ -256,23 +254,23 @@ if st.session_state.clean_df is not None:
         pdf.add_page()
         
         # 1. Premium Geometric Top Header Banner
-        pdf.set_fill_color(26, 37, 48) # Luxury Midnight Navy
+        pdf.set_fill_color(26, 37, 48) # Luxury Midnight Navy (#1A2530)
         pdf.rect(0, 0, 210, 48, 'F')
         
         # Accent Gold Bar
         pdf.set_fill_color(197, 160, 89) # Premium Dealer Gold Accent
         pdf.rect(0, 48, 210, 2, 'F')
         
-        pdf.set_font("Arial", 'B', 20)
+        pdf.set_font("Arial", 'B', 18)
         pdf.set_text_color(255, 255, 255)
         pdf.set_y(14)
         pdf.cell(0, 10, "EXECUTIVE CONVERSION AUDIT & PROFIT RECOVERY", ln=True, align='C')
         
-        pdf.set_font("Arial", 'M', 10)
+        pdf.set_font("Arial", '', 10)
         pdf.set_text_color(200, 210, 220)
         pdf.cell(0, 6, f"NETWORK ID: {dealer_name.upper()}   |   PORTFOLIO TARGET MANUFACTURER: {selected_brand.upper()}", ln=True, align='C')
         
-        # 2. Infographic Row: Macro Dashboard Cards (Left: Opportunity Cost, Right: Efficiency Status)
+        # 2. Infographic Row: Macro Dashboard Cards
         pdf.ln(18)
         
         # Left Block: Financial Liability Card
@@ -287,7 +285,7 @@ if st.session_state.clean_df is not None:
         pdf.set_text_color(120, 30, 30)
         pdf.cell(80, 5, "TOTAL MONTHLY REVENUE LEAKAGE", ln=True)
         pdf.set_x(17)
-        pdf.set_font("Arial", 'B', 15)
+        pdf.set_font("Arial", 'B', 16)
         pdf.set_text_color(180, 20, 20)
         pdf.cell(80, 8, f"Rs. {total_showroom_leak:,}", ln=True)
         pdf.set_x(17)
@@ -330,7 +328,7 @@ if st.session_state.clean_df is not None:
         # Header Row
         pdf.set_font("Arial", 'B', 9)
         pdf.set_text_color(255, 255, 255)
-        pdf.set_fill_color(44, 62, 80) # Steel Navy
+        pdf.set_fill_color(44, 62, 80) # Steel Navy (#2C3E50)
         pdf.cell(70, 8, " METRIC FLOW PROFILE", fill=True, ln=False)
         pdf.cell(40, 8, "ACTUAL CONVERSION", fill=True, ln=False, align='C')
         pdf.cell(40, 8, "TARGET BENCHMARK", fill=True, ln=False, align='C')
@@ -363,11 +361,10 @@ if st.session_state.clean_df is not None:
             pdf.cell(40, 8.5, "CRITICAL LEAK ", border="B", ln=True, align='R')
         pdf.set_text_color(40, 45, 55); pdf.set_font("Arial", '', 9)
         
-        # 4. Asymmetric Infographic Content Area (Left Infographic Graph, Right Strategic Text Block)
+        # 4. Asymmetric Infographic Content Area
         pdf.image(chart_img_path, x=8, y=140, w=92)
         
         # Right Side Data Cards
-        # Card A: Forward Projections Block
         pdf.set_y(140)
         pdf.set_x(106)
         pdf.set_font("Arial", 'B', 11)
@@ -441,7 +438,6 @@ if st.session_state.clean_df is not None:
         
         alternate_row = False
         for idx, row in display_results_df.iterrows():
-            # Alternating clean zebra striping for crisp look
             if alternate_row:
                 pdf.set_fill_color(246, 249, 252)
             else:
@@ -455,15 +451,14 @@ if st.session_state.clean_df is not None:
             pdf.cell(20, 8.5, str(row['Retails Delivered']), fill=True, ln=False, align='C', border="B")
             pdf.cell(18, 8.5, str(row['Target Retails']), fill=True, ln=False, align='C', border="B")
             
-            # Highlight non-zero losses dynamically in warning crimson bold text
             if row['raw_leak'] > 0:
                 pdf.set_text_color(190, 30, 30); pdf.set_font("Arial", 'B', 9)
                 pdf.cell(32, 8.5, f"Rs. {row['raw_leak']:,} ", fill=True, ln=False, align='R', border="B")
                 pdf.set_text_color(40, 45, 55); pdf.set_font("Arial", '', 9)
             else:
-                pdf.set_text_color(38, 166, 91) # Clean green for 0 leak
+                pdf.set_text_color(38, 166, 91); pdf.set_font("Arial", 'B', 9)
                 pdf.cell(32, 8.5, "Rs. 0 ", fill=True, ln=False, align='R', border="B")
-                pdf.set_text_color(40, 45, 55)
+                pdf.set_text_color(40, 45, 55); pdf.set_font("Arial", '', 9)
                 
             pdf.cell(58, 8.5, f"  {clean_prescription}", fill=True, ln=True, border="B")
             alternate_row = not alternate_row
