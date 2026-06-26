@@ -80,7 +80,7 @@ if uploaded_file is not None:
                     
                     for sheet in sheet_names:
                         df_peek = pd.read_excel(uploaded_file, sheet_name=sheet, nrows=5)
-                        sheet_content_sample = " ".join(df_peek.astype(str).values.flatten()).lower()
+                        sheet_content_sample = " ".join([str(item) for item in df_peek.astype(str).values.flatten()]).lower()
                         
                         if any(keyword in sheet_content_sample for keyword in anchor_keywords):
                             raw_df = pd.read_excel(uploaded_file, sheet_name=sheet)
