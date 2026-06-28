@@ -1,4 +1,4 @@
-# pages/3_👑_Model_Variant_Diagnostics.py
+# pages/2_👑_Model_Variant_Diagnostics.py
 import streamlit as st
 import pandas as pd
 import json
