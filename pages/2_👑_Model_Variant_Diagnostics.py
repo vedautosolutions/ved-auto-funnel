@@ -6,7 +6,6 @@ import os
 from google import genai
 from google.genai import types
 from fpdf import FPDF
-import matplotlib.pyplot as plt
 import tempfile
 
 # --- 1. CONFIG & APP SETUP ---
@@ -45,24 +44,6 @@ st.markdown("""
         padding: 20px;
         border-radius: 6px;
         margin-bottom: 15px;
-    }
-    .growth-names {
-        font-size: 13px;
-        color: #2D3748;
-        background-color: #FFFFFF;
-        padding: 12px;
-        border-radius: 4px;
-        border: 1px solid #E2E8F0;
-        margin-top: 8px;
-        line-height: 1.6;
-    }
-    .tier3-badge {
-        background-color: #2B6CB0;
-        color: white;
-        padding: 4px 10px;
-        border-radius: 4px;
-        font-weight: bold;
-        font-size: 12px;
     }
     </style>
 """, unsafe_allow_html=True)
@@ -129,7 +110,6 @@ if uploaded_file is not None:
                 for seg_tag, raw_df in extracted_segments:
                     sample_payload = raw_df.head(40).to_string()
                     
-                    # Premium Deep Schema System Instructions
                     system_instruction = (
                         f"You are a premium corporate automotive analytics engine parsing detailed records for the {seg_tag} division. "
                         "Identify columns mapping to: Consultant Name, Enquiries, Retails, Follow-Up %, Vehicle Model, Vehicle Variant, and Enquiry Status. "
@@ -161,10 +141,9 @@ if uploaded_file is not None:
                 
             except Exception as e:
                 error_msg = str(e)
-                # --- PROTECTION: Gracefully catch 503 high-demand exceptions ---
                 if "503" in error_msg or "UNAVAILABLE" in error_msg:
                     st.error("⚠️ **The AI Parsing Engine is currently overloaded (Error 503).**")
-                    st.info("The server is experiencing temporary high demand. Please click the **'🧠 Execute Premium Deep-Schema Parsing Engine'** button again in a few seconds to retry.")
+                    st.info("The server is experiencing temporary high demand. Please click the button again in a few seconds to retry.")
                 else:
                     st.error(f"Error parsing deep schema structures: {error_msg}")
 
@@ -190,7 +169,6 @@ if st.session_state.t3_master_df is not None:
         for index, row in edited_t3_df.iterrows():
             name = str(row["Consultant Name"]).upper().strip()
             
-            # --- CRASH PROTECTION: Safe parsing logic for messy strings/numbers ---
             try:
                 enq = int(float(str(row["Enquiries"]).strip()))
             except (ValueError, TypeError):
@@ -224,7 +202,6 @@ if st.session_state.t3_master_df is not None:
             total_retails += retails
             sum_followups += f_up
             
-            # Tier 3 Prescription Architecture: Helping both Dealership & Consultant grow
             if f_up < 70:
                 prescription = "Follow-Up Latency & Touchpoint Drills"
             elif gap > 0 and status in ["Cold", "Lost"]:
@@ -250,6 +227,7 @@ if st.session_state.t3_master_df is not None:
         display_df = pd.DataFrame(calculated_rows)
         global_leakage = total_pv_leak + total_cv_leak
         avg_showroom_followup = round(sum_followups / max(1, len(display_df)))
+        conversion_rate = round((total_retails / max(1, total_enq)) * 100, 1)
         
         # --- CARDS LAYOUT ---
         col1, col2, col3 = st.columns(3)
@@ -270,7 +248,6 @@ if st.session_state.t3_master_df is not None:
                 </div>
             """, unsafe_allow_html=True)
         with col3:
-            conversion_rate = round((total_retails / max(1, total_enq)) * 100, 1)
             st.markdown(f"""
                 <div class="metric-card-green">
                     <p style="margin:0; font-size:12px; color:#22543D; font-weight:bold;">NET SHOWROOM CONVERSION</p>
@@ -302,3 +279,76 @@ if st.session_state.t3_master_df is not None:
         # Full Interactive Analytics Output
         st.subheader("📋 Comprehensive Analytical Dataset Matrix")
         st.dataframe(display_df, use_container_width=True)
+
+        # --- 3. EXECUTIVE PDF REPORT GENERATOR ENGINE ---
+        st.subheader("📥 Export Diagnostic Intelligence")
+        
+        try:
+            pdf = FPDF()
+            pdf.add_page()
+            pdf.set_font("Helvetica", size=12)
+            
+            # Document Title Header
+            pdf.set_font("Helvetica", style="B", size=16)
+            pdf.cell(200, 10, txt=f"EXECUTIVE VELOCITY DIAGNOSTIC REPORT", ln=True, align="C")
+            pdf.set_font("Helvetica", size=11)
+            pdf.cell(200, 8, txt=f"Dealership Deployment: {dealer_name}", ln=True, align="C")
+            pdf.ln(10)
+            
+            # KPI Matrix Table Blocks
+            pdf.set_font("Helvetica", style="B", size=12)
+            pdf.cell(200, 8, txt="1. Core Funnel Performance Indices", ln=True, align="L")
+            pdf.line(10, pdf.get_y(), 200, pdf.get_y())
+            pdf.ln(3)
+            
+            pdf.set_font("Helvetica", size=11)
+            pdf.cell(100, 8, txt=f"Total Quantified Revenue Leakage:", ln=False)
+            pdf.set_font("Helvetica", style="B", size=11)
+            pdf.cell(100, 8, txt=f"Rs. {global_leakage:,}", ln=True)
+            
+            pdf.set_font("Helvetica", size=11)
+            pdf.cell(100, 8, txt=f"Mean Showroom Follow-Up Efficiency:", ln=False)
+            pdf.cell(100, 8, txt=f"{avg_showroom_followup}%", ln=True)
+            
+            pdf.cell(100, 8, txt=f"Net Showroom Funnel Conversion Rate:", ln=False)
+            pdf.cell(100, 8, txt=f"{conversion_rate}%", ln=True)
+            pdf.ln(8)
+            
+            # Segment Volume Diagnostic Summary Blocks
+            pdf.set_font("Helvetica", style="B", size=12)
+            pdf.cell(200, 8, txt="2. Inventory Variant Log & Process Breakdown", ln=True, align="L")
+            pdf.line(10, pdf.get_y(), 200, pdf.get_y())
+            pdf.ln(4)
+            
+            # Data Matrix Headers
+            pdf.set_font("Helvetica", style="B", size=9)
+            pdf.cell(15, 7, "Seg", border=1)
+            pdf.cell(40, 7, "Consultant", border=1)
+            pdf.cell(40, 7, "Primary Model", border=1)
+            pdf.cell(20, 7, "Enquiries", border=1)
+            pdf.cell(15, 7, "Retail", border=1)
+            pdf.cell(15, 7, "F-Up%", border=1)
+            pdf.cell(45, 7, "Targeted Growth Prescription", border=1, ln=True)
+            
+            # Dynamic Rows Output Loop
+            pdf.set_font("Helvetica", size=8)
+            for _, r in display_df.iterrows():
+                pdf.cell(15, 6, str(r["Segment"]), border=1)
+                pdf.cell(40, 6, str(r["Consultant Name"])[:20], border=1)
+                pdf.cell(40, 6, str(r["Primary Model"])[:20], border=1)
+                pdf.cell(20, 6, str(r["Enquiries"]), border=1)
+                pdf.cell(15, 6, str(r["Retails"]), border=1)
+                pdf.cell(15, 6, f"{r['Follow-Up %']}%", border=1)
+                pdf.cell(45, 6, str(r["Prescription"])[:28], border=1, ln=True)
+                
+            pdf_output = pdf.output(dest='S').encode('latin-1')
+            
+            st.download_button(
+                label="📥 Download Executive Diagnostic Report (PDF)",
+                data=pdf_output,
+                file_name=f"Velocity_Diagnostic_Report_{dealer_name.replace(' ', '_')}.pdf",
+                mime="application/pdf",
+                use_container_width=True
+            )
+        except Exception as pdf_error:
+            st.warning(f"Data framework processing live logic. Complete compilation steps above to output PDF pipeline options. Details: {str(pdf_error)}")
