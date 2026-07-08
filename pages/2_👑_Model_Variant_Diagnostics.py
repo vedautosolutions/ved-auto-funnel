@@ -32,7 +32,7 @@ st.markdown("""
         box-shadow: 0 1px 3px rgba(0,0,0,0.05);
     }
     .metric-card-green {
-        background-color: #F6FEDF5;
+        background-color: #F7FAFC;
         border-left: 5px solid #38A169;
         padding: 22px;
         border-radius: 6px;
@@ -160,7 +160,13 @@ if uploaded_file is not None:
                 st.success(f"🎉 Premium Schema Completed! Processed {len(st.session_state.t3_master_df)} active micro-records.")
                 
             except Exception as e:
-                st.error(f"Error parsing deep schema structures: {str(e)}")
+                error_msg = str(e)
+                # --- PROTECTION: Gracefully catch 503 high-demand exceptions ---
+                if "503" in error_msg or "UNAVAILABLE" in error_msg:
+                    st.error("⚠️ **The AI Parsing Engine is currently overloaded (Error 503).**")
+                    st.info("The server is experiencing temporary high demand. Please click the **'🧠 Execute Premium Deep-Schema Parsing Engine'** button again in a few seconds to retry.")
+                else:
+                    st.error(f"Error parsing deep schema structures: {error_msg}")
 
 # Analytical Workspace Processing Block
 if st.session_state.t3_master_df is not None:
@@ -183,10 +189,24 @@ if st.session_state.t3_master_df is not None:
         
         for index, row in edited_t3_df.iterrows():
             name = str(row["Consultant Name"]).upper().strip()
-            enq = int(row["Enquiries"])
-            retails = int(row["Retails"])
+            
+            # --- CRASH PROTECTION: Safe parsing logic for messy strings/numbers ---
+            try:
+                enq = int(float(str(row["Enquiries"]).strip()))
+            except (ValueError, TypeError):
+                enq = 0
+                
+            try:
+                retails = int(float(str(row["Retails"]).strip()))
+            except (ValueError, TypeError):
+                retails = 0
+                
+            try:
+                f_up = int(float(str(row.get("Follow-Up %", 80)).strip()))
+            except (ValueError, TypeError):
+                f_up = 80
+            
             segment = str(row["Segment"])
-            f_up = int(row.get("Follow-Up %", 80))
             model = str(row.get("Model", "UNKNOWN")).upper().strip()
             variant = str(row.get("Variant", "STD")).upper().strip()
             status = str(row.get("Status", "Warm")).capitalize().strip()
@@ -265,4 +285,20 @@ if st.session_state.t3_master_df is not None:
         
         with t3_col1:
             st.caption("🚨 Stagnant High-Value Product Lines (Cold & Lost Status)")
-            stagnant_inv = display_df
+            stagnant_df = display_df[display_df["Lead Status"].isin(["Cold", "Lost"])].reset_index(drop=True)
+            if not stagnant_df.empty:
+                st.dataframe(stagnant_df[["Primary Model", "Variant", "Segment", "Consultant Name", "Lead Status"]], use_container_width=True)
+            else:
+                st.info("No high-value pipelines are flagged as stagnant or cold.")
+                
+        with t3_col2:
+            st.caption("🔥 Active High-Velocity Pipelines (Hot & Warm Status)")
+            active_df = display_df[display_df["Lead Status"].isin(["Hot", "Warm"])].reset_index(drop=True)
+            if not active_df.empty:
+                st.dataframe(active_df[["Primary Model", "Variant", "Segment", "Consultant Name", "Lead Status"]], use_container_width=True)
+            else:
+                st.info("No active hot or warm pipeline variants found.")
+
+        # Full Interactive Analytics Output
+        st.subheader("📋 Comprehensive Analytical Dataset Matrix")
+        st.dataframe(display_df, use_container_width=True)
