@@ -33,10 +33,9 @@ INDIAN_BRANDS = {
 BM = {"TD": 0.75, "RETAIL": 0.30, "CAPACITY": 20}
 
 # --- URL PARAMETER DETECTION ---
-# query_params = st.query_params
-# url_category = query_params.get("category", "4-Wheeler")
-# default_index = 0 if url_category == "4-Wheeler" else 1
-default_index = 0
+query_params = st.query_params
+url_category = query_params.get("category", "4-Wheeler")
+default_index = 0 if url_category == "4-Wheeler" else 1
 
 # --- 2. PAGE CONFIG ---
 st.set_page_config(page_title="AutoLogic Pro", layout="wide", initial_sidebar_state="expanded")
