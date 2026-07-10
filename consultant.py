@@ -169,7 +169,7 @@ if st.session_state.master_clean_df is not None:
             
             target_retails = round(enq * TARGET_RETAIL_RATE)
             
-            if retails < target:
+            if retails > target_retails:
                 gap = retails-target_retails
             else:
                 gap = target_retails-retails
