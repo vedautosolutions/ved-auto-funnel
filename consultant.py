@@ -63,7 +63,7 @@ if access_passcode != "VEDAUTO2026":
     st.stop()
 
 st.title("💎 Tier 2: Enterprise Multi-Segment Diagnostics")
-st.write("Upload master DMS trackers or files like `BMPL H2.xlsx`. The system automatically splits data by segment (PV vs. CV) and builds uniform diagnostic matrices.")
+st.write("Upload master DMS tracker or file. The system automatically splits data by segment if any and builds uniform diagnostic matrices.")
 
 # Showroom Configuration Workspace
 with st.sidebar:
