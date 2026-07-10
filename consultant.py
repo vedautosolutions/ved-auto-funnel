@@ -169,9 +169,9 @@ if st.session_state.master_clean_df is not None:
             
             target_retails = round(enq * TARGET_RETAIL_RATE)
             
-            if retail < target
+            if retail < target:
                 gap = retails-target_retails
-            else
+            else:
                 gap = target_retails-retails
             
         #gap = max(0, target_retails - retails)
