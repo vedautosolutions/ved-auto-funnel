@@ -168,7 +168,13 @@ if st.session_state.master_clean_df is not None:
             segment = str(row["Segment"])
             
             target_retails = round(enq * TARGET_RETAIL_RATE)
-            gap = max(0, target_retails - retails)
+            
+            if retail < target
+                gap = retails-target_retails
+            else
+                gap = target_retails-retails
+            
+        #gap = max(0, target_retails - retails)
             
             if segment == "PV":
                 leak = gap * pv_profit
@@ -189,7 +195,7 @@ if st.session_state.master_clean_df is not None:
                 "Enquiries": enq,
                 "Retails": retails,
                 "Target Retails": target_retails,
-                "Revenue Leak (Rs.)": leak,
+                "Revenue Leak or Profit (Rs.)": leak,
                 "Prescription": prescription
             })
             
@@ -256,11 +262,11 @@ if st.session_state.master_clean_df is not None:
         
         with tab_pv:
             pv_slice = display_df[display_df["Segment"] == "PV"].drop(columns=["Segment", "Prescription"])
-            st.dataframe(pv_slice.style.format({"Revenue Leak (Rs.)": "Rs. {:,}"}), use_container_width=True, hide_index=True)
+            st.dataframe(pv_slice.style.format({"Revenue Leak/Profit (Rs.)": "Rs. {:,}"}), use_container_width=True, hide_index=True)
             
         with tab_cv:
             cv_slice = display_df[display_df["Segment"] == "CV"].drop(columns=["Segment", "Prescription"])
-            st.dataframe(cv_slice.style.format({"Revenue Leak (Rs.)": "Rs. {:,}"}), use_container_width=True, hide_index=True)
+            st.dataframe(cv_slice.style.format({"Revenue Leak/Profit (Rs.)": "Rs. {:,}"}), use_container_width=True, hide_index=True)
 
         # --- REFACTORED MANDATE SUMMARY ROSTER BLOCK (WEBPAGE) ---
         st.subheader("🎯 Standalone Divisional Training Mandate & Roster Summary")
