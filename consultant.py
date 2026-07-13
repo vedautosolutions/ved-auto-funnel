@@ -63,7 +63,7 @@ if access_passcode != "VEDAUTO2026":
     st.stop()
 
 st.title("💎 Tier 2: Enterprise Multi-Segment Diagnostics")
-st.write("Upload master DMS tracker or file. The system automatically splits data by segment if any and builds uniform diagnostic matrices.")
+st.write("Upload master DMS trackers or files like `BMPL H2.xlsx`. The system automatically splits data by segment (PV vs. CV) and builds uniform diagnostic matrices.")
 
 # Showroom Configuration Workspace
 with st.sidebar:
@@ -168,13 +168,7 @@ if st.session_state.master_clean_df is not None:
             segment = str(row["Segment"])
             
             target_retails = round(enq * TARGET_RETAIL_RATE)
-            
-            if retails > target_retails:
-                gap = retails-target_retails
-            else:
-                gap = target_retails-retails
-            
-        #gap = max(0, target_retails - retails)
+            gap = max(0, target_retails - retails)
             
             if segment == "PV":
                 leak = gap * pv_profit
@@ -195,7 +189,7 @@ if st.session_state.master_clean_df is not None:
                 "Enquiries": enq,
                 "Retails": retails,
                 "Target Retails": target_retails,
-                "Revenue Leak or Profit (Rs.)": leak,
+                "Revenue Leak (Rs.)": leak,
                 "Prescription": prescription
             })
             
